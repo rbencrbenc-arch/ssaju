@@ -140,7 +140,7 @@ export default async function handler(req, res) {
 
     if (!upstream.ok) {
       const detail = await upstream.text();
-      res.status(502).json({ error: "upstream", message: "AI 응답 실패", detail: detail.slice(0, 400) });
+      res.status(502).json({ error: "upstream", message: `AI 응답 실패 (HTTP ${upstream.status})`, detail: detail.slice(0, 600) });
       return;
     }
 
