@@ -61,6 +61,14 @@
     .go.love { background: var(--love); color: #fff; }
     .go:active { transform: translateY(1px); }
 
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 12px; }
+    .preset-label { font-size: 11px; color: var(--muted); margin-right: 2px; }
+    .preset-chip { display: inline-flex; align-items: center; background: var(--card2); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+    .preset-chip .pc-fill { border: none; background: transparent; color: var(--text); font-size: 12.5px; padding: 6px 4px 6px 11px; cursor: pointer; }
+    .preset-chip .pc-del { border: none; background: transparent; color: var(--muted); font-size: 14px; padding: 6px 9px 6px 4px; cursor: pointer; line-height: 1; }
+    .save-btn { width: 100%; margin-top: 8px; padding: 11px; border: 1px dashed var(--line); border-radius: 10px; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
+    .msaves { display: flex; gap: 8px; margin-top: 8px; }
+    .msaves button { flex: 1; padding: 10px; border: 1px dashed var(--line); border-radius: 10px; background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
     .person-label { font-size: 13px; font-weight: 700; color: var(--accent); margin: 0 0 8px; }
     .person-label.b { color: var(--accent2); }
     .heart-div { text-align: center; color: var(--love); font-size: 20px; margin: 4px 0 12px; }
@@ -140,19 +148,21 @@
     <!-- ===== 내 사주 ===== -->
     <section id="viewSolo">
       <div class="card">
+        <div id="s_presets" class="presets"></div>
         <div class="fld"><label>이름 (선택)</label><input id="s_name" type="text" maxlength="20" placeholder="홍길동" /></div>
         <div class="grid">
-          <div><label>년</label><input id="s_year" type="number" inputmode="numeric" placeholder="2001" /></div>
-          <div><label>월</label><input id="s_month" type="number" inputmode="numeric" placeholder="11" /></div>
-          <div><label>일</label><input id="s_day" type="number" inputmode="numeric" placeholder="3" /></div>
+          <div><label>년</label><select id="s_year"></select></div>
+          <div><label>월</label><select id="s_month"></select></div>
+          <div><label>일</label><select id="s_day"></select></div>
         </div>
         <div class="row2">
-          <div><label>시 (모르면 비움)</label><input id="s_hour" type="number" inputmode="numeric" placeholder="14" /></div>
-          <div><label>분</label><input id="s_minute" type="number" inputmode="numeric" placeholder="20" /></div>
+          <div><label>시</label><select id="s_hour"></select></div>
+          <div><label>분</label><select id="s_minute"></select></div>
         </div>
         <div class="seg" id="s_gender"><button data-v="남" class="on">남성</button><button data-v="여">여성</button></div>
         <div class="seg" id="s_cal"><button data-v="solar" class="on">양력</button><button data-v="lunar">음력</button></div>
         <button class="go" id="s_go">사주 보기</button>
+        <button class="save-btn" id="s_save">+ 이 사람 프리셋 저장</button>
       </div>
       <div id="soloResult"></div>
     </section>
@@ -161,15 +171,16 @@
     <section id="viewMatch" hidden>
       <div class="card love">
         <p class="person-label">첫 번째 사람</p>
+        <div id="a_presets" class="presets"></div>
         <div class="fld"><label>이름</label><input id="a_name" type="text" maxlength="20" placeholder="나" /></div>
         <div class="grid">
-          <div><label>년</label><input id="a_year" type="number" inputmode="numeric" placeholder="2001" /></div>
-          <div><label>월</label><input id="a_month" type="number" inputmode="numeric" placeholder="11" /></div>
-          <div><label>일</label><input id="a_day" type="number" inputmode="numeric" placeholder="3" /></div>
+          <div><label>년</label><select id="a_year"></select></div>
+          <div><label>월</label><select id="a_month"></select></div>
+          <div><label>일</label><select id="a_day"></select></div>
         </div>
         <div class="row2">
-          <div><label>시 (모르면 비움)</label><input id="a_hour" type="number" inputmode="numeric" placeholder="14" /></div>
-          <div><label>분</label><input id="a_minute" type="number" inputmode="numeric" placeholder="20" /></div>
+          <div><label>시</label><select id="a_hour"></select></div>
+          <div><label>분</label><select id="a_minute"></select></div>
         </div>
         <div class="seg" id="a_gender"><button data-v="남" class="on">남성</button><button data-v="여">여성</button></div>
         <div class="seg" id="a_cal"><button data-v="solar" class="on">양력</button><button data-v="lunar">음력</button></div>
@@ -177,20 +188,22 @@
         <div class="heart-div">♡</div>
 
         <p class="person-label b">두 번째 사람</p>
+        <div id="b_presets" class="presets"></div>
         <div class="fld"><label>이름</label><input id="b_name" type="text" maxlength="20" placeholder="상대" /></div>
         <div class="grid">
-          <div><label>년</label><input id="b_year" type="number" inputmode="numeric" placeholder="1999" /></div>
-          <div><label>월</label><input id="b_month" type="number" inputmode="numeric" placeholder="5" /></div>
-          <div><label>일</label><input id="b_day" type="number" inputmode="numeric" placeholder="20" /></div>
+          <div><label>년</label><select id="b_year"></select></div>
+          <div><label>월</label><select id="b_month"></select></div>
+          <div><label>일</label><select id="b_day"></select></div>
         </div>
         <div class="row2">
-          <div><label>시 (모르면 비움)</label><input id="b_hour" type="number" inputmode="numeric" placeholder="9" /></div>
-          <div><label>분</label><input id="b_minute" type="number" inputmode="numeric" placeholder="0" /></div>
+          <div><label>시</label><select id="b_hour"></select></div>
+          <div><label>분</label><select id="b_minute"></select></div>
         </div>
         <div class="seg" id="b_gender"><button data-v="남">남성</button><button data-v="여" class="on">여성</button></div>
         <div class="seg" id="b_cal"><button data-v="solar" class="on">양력</button><button data-v="lunar">음력</button></div>
 
         <button class="go love" id="m_go">궁합 보기</button>
+        <div class="msaves"><button id="a_save">① 첫 번째 저장</button><button id="b_save">② 두 번째 저장</button></div>
       </div>
       <div id="matchResult"></div>
     </section>
@@ -230,7 +243,7 @@
 
     // read one person's form by id prefix; returns { input, name } or null
     function readPerson(p) {
-      const num = (k) => { const v = $(`${p}_${k}`).value.trim(); return v === "" ? undefined : Number(v); };
+      const num = (k) => { const v = String($(`${p}_${k}`).value).trim(); return v === "" ? undefined : Number(v); };
       const year = num("year"), month = num("month"), day = num("day");
       if (!year || !month || !day) return null;
       return {
@@ -242,6 +255,93 @@
         },
       };
     }
+
+    // ---- populate date/time selects ----
+    function fillSelect(id, items, placeholder, selected) {
+      const sel = $(id);
+      sel.innerHTML = "";
+      if (placeholder !== undefined) {
+        const o = document.createElement("option");
+        o.value = ""; o.textContent = placeholder; o.disabled = true; o.selected = true;
+        sel.appendChild(o);
+      }
+      for (const it of items) {
+        const o = document.createElement("option");
+        o.value = String(it.v); o.textContent = it.t;
+        if (selected !== undefined && String(it.v) === String(selected)) o.selected = true;
+        sel.appendChild(o);
+      }
+    }
+    const range = (a, b) => { const r = []; for (let i = a; i <= b; i++) r.push(i); return r; };
+    const NOW_Y = 2026;
+    function populateSelects(p) {
+      fillSelect(`${p}_year`, range(1930, NOW_Y).reverse().map((v) => ({ v, t: v + "년" })), "년");
+      fillSelect(`${p}_month`, range(1, 12).map((v) => ({ v, t: v + "월" })), "월");
+      fillSelect(`${p}_day`, range(1, 31).map((v) => ({ v, t: v + "일" })), "일");
+      fillSelect(`${p}_hour`, range(0, 23).map((v) => ({ v, t: `${String(v).padStart(2, "0")}시 (${v < 12 ? "오전" : "오후"})` })), "시 모름");
+      fillSelect(`${p}_minute`, range(0, 59).map((v) => ({ v, t: v + "분" })), undefined, 0);
+    }
+    ["s", "a", "b"].forEach(populateSelects);
+
+    function setSeg(id, val) {
+      const seg = $(id); if (!seg) return;
+      seg.dataset.value = val;
+      [...seg.children].forEach((b) => b.classList.toggle("on", b.dataset.v === val));
+    }
+    function fillPerson(p, person) {
+      $(`${p}_name`).value = person.name || "";
+      $(`${p}_year`).value = String(person.year);
+      $(`${p}_month`).value = String(person.month);
+      $(`${p}_day`).value = String(person.day);
+      $(`${p}_hour`).value = person.hour == null ? "" : String(person.hour);
+      $(`${p}_minute`).value = String(person.minute == null ? 0 : person.minute);
+      setSeg(`${p}_gender`, person.gender || "남");
+      setSeg(`${p}_cal`, person.calendar || "solar");
+    }
+
+    // ---- presets (localStorage) ----
+    const SEED = [
+      { name: "조연우", year: 2011, month: 7, day: 29, hour: 10, minute: 0, gender: "여", calendar: "solar" },
+      { name: "조대영", year: 1979, month: 2, day: 4, hour: 17, minute: 0, gender: "남", calendar: "solar" },
+    ];
+    function loadPeople() {
+      try { const a = JSON.parse(localStorage.getItem("ssaju_people") || "null"); if (Array.isArray(a)) return a; } catch (e) {}
+      return SEED.slice();
+    }
+    function savePeople() { try { localStorage.setItem("ssaju_people", JSON.stringify(people)); } catch (e) {} }
+    let people = loadPeople();
+    const personKey = (x) => `${x.name}|${x.year}.${x.month}.${x.day}.${x.hour}`;
+
+    function renderPresets() {
+      for (const [boxId, p] of [["s_presets", "s"], ["a_presets", "a"], ["b_presets", "b"]]) {
+        const box = $(boxId); if (!box) continue;
+        box.innerHTML = "";
+        if (!people.length) continue;
+        const lbl = document.createElement("span"); lbl.className = "preset-label"; lbl.textContent = "저장됨"; box.appendChild(lbl);
+        people.forEach((person, idx) => {
+          const wrap = document.createElement("span"); wrap.className = "preset-chip";
+          const fill = document.createElement("button"); fill.type = "button"; fill.className = "pc-fill";
+          fill.textContent = person.name || `${person.year}.${person.month}.${person.day}`;
+          fill.addEventListener("click", () => fillPerson(p, person));
+          const del = document.createElement("button"); del.type = "button"; del.className = "pc-del"; del.textContent = "×"; del.title = "삭제";
+          del.addEventListener("click", () => { people.splice(idx, 1); savePeople(); renderPresets(); });
+          wrap.appendChild(fill); wrap.appendChild(del); box.appendChild(wrap);
+        });
+      }
+    }
+    function saveCurrent(p) {
+      const person = readPerson(p);
+      if (!person) { alert("년/월/일을 먼저 선택해 주세요."); return; }
+      const rec = { name: person.name || `${person.input.year}.${person.input.month}.${person.input.day}`, ...person.input };
+      people = people.filter((x) => personKey(x) !== personKey(rec));
+      people.unshift(rec);
+      if (people.length > 12) people = people.slice(0, 12);
+      savePeople(); renderPresets();
+    }
+    $("s_save").addEventListener("click", () => saveCurrent("s"));
+    $("a_save").addEventListener("click", () => saveCurrent("a"));
+    $("b_save").addEventListener("click", () => saveCurrent("b"));
+    renderPresets();
 
     // ---- lightweight markdown -> html ----
     function mdToHtml(md) {
