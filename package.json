@@ -42,6 +42,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build:js": "esbuild src/calculate.ts --bundle --format=esm --platform=neutral --target=es2020 --minify --legal-comments=none --outfile=dist/index.mjs && terser dist/index.mjs -c passes=3,pure_getters=true -m --module --ecma 2020 -o dist/index.mjs",
+    "build:web": "esbuild src/calculate.ts --bundle --format=esm --platform=browser --target=es2020 --outfile=web/ssaju.mjs",
     "build:types": "dts-bundle-generator --project tsconfig.types.json --out-file dist/index.d.ts src/calculate.ts",
     "size": "node scripts/size-report.mjs",
     "perf": "node scripts/benchmark.mjs",
@@ -56,7 +57,7 @@
     "esbuild": "^0.27.0",
     "rimraf": "^6.0.1",
     "terser": "^5.44.1",
-    "typescript": "^5.9.3",
-    "tsx": "^4.20.6"
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   }
 }

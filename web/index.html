@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ssaju · 사주 · 성격 분석</title>
+  <meta name="description" content="생년월일시로 보는 사주 원국과 성격 분석. ssaju 엔진 기반." />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --card2: #1e222b;
+      --line: #2a2f3a;
+      --text: #e8eaed;
+      --muted: #9aa0aa;
+      --accent: #c9a24b;
+      --accent2: #6ea8fe;
+      --good: #4bbf8a;
+      --warn: #e0a13a;
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f4f5f7; --card: #ffffff; --card2: #f7f8fa; --line: #e5e7eb;
+        --text: #1a1d23; --muted: #6b7280; --accent: #a9812f; --accent2: #2f6bd8;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", Roboto, sans-serif;
+      line-height: 1.5; -webkit-text-size-adjust: 100%;
+    }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 24px 16px 64px; }
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.5px; }
+    header h1 .dot { color: var(--accent); }
+    header p { color: var(--muted); margin: 0; font-size: 14px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select {
+      width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--card2); color: var(--text); font-size: 16px; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent2); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .seg { display: flex; gap: 8px; margin-top: 10px; }
+    .seg button {
+      flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--card2); color: var(--muted); font-size: 14px; cursor: pointer;
+    }
+    .seg button.on { background: var(--accent); color: #1a1207; border-color: var(--accent); font-weight: 700; }
+    .go {
+      width: 100%; margin-top: 16px; padding: 15px; border: none; border-radius: 12px;
+      background: var(--accent); color: #1a1207; font-size: 17px; font-weight: 800; cursor: pointer;
+    }
+    .go:active { transform: translateY(1px); }
+    #result { margin-top: 8px; }
+    .sec-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px; }
+    .base { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .base b { color: var(--text); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 8px 4px; text-align: center; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; }
+    td.big { font-size: 20px; font-weight: 700; }
+    .hanja { color: var(--accent); }
+    .persona-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .persona-head .stem { font-size: 30px; font-weight: 800; color: var(--accent); }
+    .persona-head .arch { font-size: 17px; font-weight: 700; }
+    .persona-head .ko { color: var(--muted); font-size: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .chip { background: var(--card2); border: 1px solid var(--line); color: var(--text); font-size: 12px; padding: 4px 10px; border-radius: 999px; }
+    .desc { font-size: 14px; color: var(--text); margin: 8px 0; }
+    .bars { margin: 12px 0; }
+    .bar-row { display: grid; grid-template-columns: 42px 1fr 28px; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; }
+    .bar-track { background: var(--card2); border-radius: 6px; height: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--accent2); border-radius: 6px; }
+    .bar-fill.dom { background: var(--accent); }
+    .bar-row .n { text-align: right; color: var(--muted); }
+    .lists { display: grid; gap: 12px; margin-top: 12px; }
+    .lists h4 { margin: 0 0 6px; font-size: 13px; }
+    .lists .good h4 { color: var(--good); }
+    .lists .warn h4 { color: var(--warn); }
+    .lists ul { margin: 0; padding-left: 18px; }
+    .lists li { font-size: 13.5px; margin: 3px 0; }
+    details { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+    summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+    pre { white-space: pre-wrap; word-break: break-word; font-size: 12.5px; background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+    .err { color: #e5484d; font-size: 14px; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+    footer a { color: var(--accent2); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ssaju<span class="dot">.</span></h1>
+      <p>생년월일시로 보는 사주 원국 &amp; 성격</p>
+    </header>
+
+    <div class="card">
+      <div class="grid">
+        <div><label>년</label><input id="year" type="number" inputmode="numeric" placeholder="2001" /></div>
+        <div><label>월</label><input id="month" type="number" inputmode="numeric" placeholder="11" /></div>
+        <div><label>일</label><input id="day" type="number" inputmode="numeric" placeholder="3" /></div>
+      </div>
+      <div class="row2">
+        <div><label>시 (0~23, 모르면 비움)</label><input id="hour" type="number" inputmode="numeric" placeholder="14" /></div>
+        <div><label>분</label><input id="minute" type="number" inputmode="numeric" placeholder="20" /></div>
+      </div>
+      <div class="seg" id="genderSeg">
+        <button type="button" data-v="남" class="on">남성</button>
+        <button type="button" data-v="여">여성</button>
+      </div>
+      <div class="seg" id="calSeg">
+        <button type="button" data-v="solar" class="on">양력</button>
+        <button type="button" data-v="lunar">음력</button>
+      </div>
+      <button class="go" id="go">사주 보기</button>
+    </div>
+
+    <div id="result"></div>
+
+    <footer>
+      <a href="https://github.com/rbencrbenc-arch/ssaju" target="_blank" rel="noopener">ssaju</a> 엔진 · 계산은 브라우저에서 · 참고용
+    </footer>
+  </div>
+
+  <script type="module">
+    import { calculateSaju } from "./ssaju.mjs";
+
+    const $ = (id) => document.getElementById(id);
+    let gender = "남";
+    let calendar = "solar";
+
+    function seg(segId, set) {
+      $(segId).addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        [...$(segId).children].forEach((c) => c.classList.remove("on"));
+        b.classList.add("on");
+        set(b.dataset.v);
+      });
+    }
+    seg("genderSeg", (v) => (gender = v));
+    seg("calSeg", (v) => (calendar = v));
+
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+    function pillarTable(p) {
+      const cols = ["hour", "day", "month", "year"];
+      const head = ["시주", "일주", "월주", "연주"];
+      const stems = cols.map((k) => p[k]);
+      const branches = cols.map((k) => p[k]);
+      // p is pillarDetails
+      let th = head.map((h) => `<th>${h}</th>`).join("");
+      let stemRow = cols.map((k) => `<td class="big"><span class="hanja">${esc(p[k].stem)}</span><div style="font-size:11px;color:var(--muted)">${esc(p[k].stemKo)}${esc(p[k].element.stem)}</div></td>`).join("");
+      let branchRow = cols.map((k) => `<td class="big"><span class="hanja">${esc(p[k].branch)}</span><div style="font-size:11px;color:var(--muted)">${esc(p[k].branchKo)}${esc(p[k].element.branch)}</div></td>`).join("");
+      return `<table><thead><tr><th></th>${th}</tr></thead><tbody>
+        <tr><th>천간</th>${stemRow}</tr>
+        <tr><th>지지</th>${branchRow}</tr></tbody></table>`;
+    }
+
+    function bars(dist, dominant) {
+      const order = ["비겁", "식상", "재성", "관성", "인성"];
+      const max = Math.max(1, ...order.map((k) => dist[k]));
+      return `<div class="bars">` + order.map((k) => {
+        const w = Math.round((dist[k] / max) * 100);
+        return `<div class="bar-row"><span>${k}</span><div class="bar-track"><div class="bar-fill ${k === dominant ? "dom" : ""}" style="width:${w}%"></div></div><span class="n">${dist[k]}</span></div>`;
+      }).join("") + `</div>`;
+    }
+
+    function elementBars(fe) {
+      const order = ["목", "화", "토", "금", "수"];
+      const max = Math.max(1, ...order.map((k) => fe[k] || 0));
+      return `<div class="bars">` + order.map((k) => {
+        const v = fe[k] || 0;
+        const w = Math.round((v / max) * 100);
+        return `<div class="bar-row"><span>${k}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div><span class="n">${v}</span></div>`;
+      }).join("") + `</div>`;
+    }
+
+    function render(r) {
+      const a = r.advanced;
+      const p = a.personality;
+      const dm = p.dayMaster;
+      const i = r.input;
+      const strengthKo = a.dayStrength.strength === "strong" ? "신강" : a.dayStrength.strength === "weak" ? "신약" : "중화";
+
+      const out = `
+        <div class="card">
+          <p class="sec-title">기본 정보</p>
+          <p class="base"><b>${i.year}.${i.month}.${i.day} ${String(i.hour).padStart(2,"0")}:${String(i.minute).padStart(2,"0")}</b> · ${i.gender==="남"?"남성":"여성"} · ${i.calendar==="solar"?"양력":"음력"} · 만 ${r.currentAge}세</p>
+          <p class="base">일간 <b class="hanja">${esc(r.dayStem)}</b> · ${strengthKo}(${a.dayStrength.score}) · ${esc(a.geukguk)} · 용신 ${a.yongsin.join(", ")||"-"}</p>
+        </div>
+
+        <div class="card">
+          <p class="sec-title">원국 (사주 4주)</p>
+          ${pillarTable(r.pillarDetails)}
+        </div>
+
+        <div class="card">
+          <p class="sec-title">성격</p>
+          <div class="persona-head">
+            <span class="stem">${esc(dm.stem)}</span>
+            <span class="arch">${esc(dm.archetype)}</span>
+            <span class="ko">${esc(dm.stemKo)}${esc(dm.element)} · ${dm.yinYang}</span>
+          </div>
+          <div class="chips">${dm.keywords.map((k)=>`<span class="chip">${esc(k)}</span>`).join("")}</div>
+          <p class="desc">${esc(dm.description)}</p>
+          <p class="base" style="margin-top:14px">대표 기운 · <b>${esc(p.tenGodProfile.dominant)}</b></p>
+          ${bars(p.tenGodProfile.distribution, p.tenGodProfile.dominant)}
+          <p class="desc">${esc(p.tenGodProfile.description)}</p>
+          <p class="desc" style="color:var(--muted)">${esc(p.temperament.description)}</p>
+          <div class="lists">
+            <div class="good"><h4>✔ 강점</h4><ul>${p.strengths.map((s)=>`<li>${esc(s)}</li>`).join("")}</ul></div>
+            <div class="warn"><h4>! 주의</h4><ul>${p.cautions.map((s)=>`<li>${esc(s)}</li>`).join("")}</ul></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="sec-title">오행 분포</p>
+          ${elementBars(r.fiveElements)}
+        </div>
+
+        <div class="card">
+          <details><summary>전체 리포트 (Markdown) 펼치기</summary><pre>${esc(r.toMarkdown())}</pre></details>
+          <details><summary>LLM 압축 텍스트 (toCompact) 펼치기</summary><pre>${esc(r.toCompact())}</pre></details>
+        </div>
+      `;
+      $("result").innerHTML = out;
+      $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    $("go").addEventListener("click", () => {
+      const num = (id) => { const v = $(id).value.trim(); return v === "" ? undefined : Number(v); };
+      const year = num("year"), month = num("month"), day = num("day");
+      if (!year || !month || !day) {
+        $("result").innerHTML = `<div class="card"><p class="err">년/월/일을 모두 입력해 주세요.</p></div>`;
+        return;
+      }
+      try {
+        const r = calculateSaju({
+          year, month, day,
+          hour: num("hour"), minute: num("minute"),
+          gender, calendar,
+        });
+        render(r);
+      } catch (e) {
+        $("result").innerHTML = `<div class="card"><p class="err">계산 오류: ${esc(e && e.message || e)}</p></div>`;
+      }
+    });
+  </script>
+</body>
+</html>
