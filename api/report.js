@@ -122,40 +122,59 @@ export default async function handler(req, res) {
       return;
     }
 
-    const model = process.env.SAJU_MODEL || "gemini-2.5-flash";
     const prompt = buildPrompt({ ...body, topic });
 
-    const upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-goog-api-key": key },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM }] },
-          contents: [{ role: "user", parts: [{ text: prompt.text }] }],
-          generationConfig: { maxOutputTokens: 1800, temperature: 0.9 },
-        }),
-      },
-    );
+    // 모델이 신규 사용자에게 막히거나(404) 무료 한도가 0(429)이면 다음 후보로 넘어간다.
+    // '-latest' 별칭은 구글이 최신 모델로 자동 연결해줘서 모델 교체에도 안 깨진다.
+    const candidates = [];
+    if (process.env.SAJU_MODEL) candidates.push(process.env.SAJU_MODEL);
+    for (const m of [
+      "gemini-flash-latest",
+      "gemini-flash-lite-latest",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-lite",
+    ]) {
+      if (!candidates.includes(m)) candidates.push(m);
+    }
 
-    if (!upstream.ok) {
+    const payload = JSON.stringify({
+      system_instruction: { parts: [{ text: SYSTEM }] },
+      contents: [{ role: "user", parts: [{ text: prompt.text }] }],
+      generationConfig: { maxOutputTokens: 1800, temperature: 0.9 },
+    });
+
+    let last = { status: 0, detail: "" };
+    for (const model of candidates) {
+      const upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body: payload },
+      );
+
+      if (upstream.ok) {
+        const data = await upstream.json();
+        const cand = (data.candidates && data.candidates[0]) || {};
+        const text = ((cand.content && cand.content.parts) || []).map((p) => p.text || "").join("").trim();
+        if (text) {
+          res.status(200).json({ text, model, topic });
+          return;
+        }
+        const reason = cand.finishReason || (data.promptFeedback && data.promptFeedback.blockReason) || "empty";
+        res.status(502).json({ error: "empty", message: `AI가 응답을 생성하지 못했습니다 (${reason}, model ${model}).` });
+        return;
+      }
+
       const detail = await upstream.text();
-      res.status(502).json({ error: "upstream", message: `AI 응답 실패 (HTTP ${upstream.status})`, detail: detail.slice(0, 600) });
-      return;
+      last = { status: upstream.status, detail };
+      // 404(모델 없음)·429(한도 0)면 다음 모델 시도. 그 외(400 키오류·403 권한)는 모델 바꿔도 안 되므로 중단.
+      if (upstream.status !== 404 && upstream.status !== 429) break;
     }
 
-    const data = await upstream.json();
-    const cand = (data.candidates && data.candidates[0]) || {};
-    const text = ((cand.content && cand.content.parts) || [])
-      .map((p) => p.text || "")
-      .join("")
-      .trim();
-    if (!text) {
-      const reason = cand.finishReason || (data.promptFeedback && data.promptFeedback.blockReason) || "empty";
-      res.status(502).json({ error: "empty", message: `AI가 응답을 생성하지 못했습니다 (${reason}).` });
-      return;
-    }
-    res.status(200).json({ text, model, topic });
+    res.status(502).json({
+      error: "upstream",
+      message: `AI 응답 실패 (HTTP ${last.status}) — 사용 가능한 모델을 찾지 못했습니다`,
+      detail: String(last.detail).slice(0, 600),
+    });
   } catch (e) {
     res.status(500).json({ error: "server", message: String((e && e.message) || e) });
   }
