@@ -167,6 +167,7 @@ export type SajuResult = {
       | "기타";
     yongsin: string[];
     sinsal: { gilsin: string[]; hyungsin: string[] };
+    personality: Personality;
     interpretation: string;
   };
 
@@ -221,6 +222,34 @@ export type NormalizedBirth = {
     offsetMinutes: number;
     standardLongitude: number;
   };
+};
+
+export type TenGodGroup = "비겁" | "식상" | "재성" | "관성" | "인성";
+
+export type Personality = {
+  dayMaster: {
+    stem: string;
+    stemKo: string;
+    element: string;
+    yinYang: "양" | "음";
+    archetype: string;
+    keywords: string[];
+    description: string;
+  };
+  tenGodProfile: {
+    dominant: TenGodGroup;
+    distribution: Record<TenGodGroup, number>;
+    keywords: string[];
+    description: string;
+  };
+  temperament: {
+    strongest: string;
+    weakest: string;
+    description: string;
+  };
+  strengths: string[];
+  cautions: string[];
+  summary: string;
 };
 
 export type FourPillar = { heavenlyStem: string; earthlyBranch: string };

@@ -316,6 +316,16 @@ export function generateMarkdownSummary(data: SajuResult): string {
   md += `- 내일: ${data.reference.codes.tomorrow}\n`;
   md += `- 오늘날짜: ${data.reference.now.split(" ")[0]}\n\n`;
 
+  const p = data.advanced.personality;
+  md += `## 성격\n`;
+  md += `- 일간(본질): ${p.dayMaster.stem}(${p.dayMaster.stemKo}${p.dayMaster.element}, ${p.dayMaster.yinYang}) — ${p.dayMaster.archetype} / ${p.dayMaster.keywords.join(", ")}\n`;
+  md += `- ${p.dayMaster.description}\n`;
+  md += `- 대표 기운: ${p.tenGodProfile.dominant} (비겁 ${p.tenGodProfile.distribution.비겁} · 식상 ${p.tenGodProfile.distribution.식상} · 재성 ${p.tenGodProfile.distribution.재성} · 관성 ${p.tenGodProfile.distribution.관성} · 인성 ${p.tenGodProfile.distribution.인성})\n`;
+  md += `- ${p.tenGodProfile.description}\n`;
+  md += `- 기질: ${p.temperament.description}\n`;
+  md += `- 강점: ${p.strengths.join(" / ")}\n`;
+  md += `- 주의: ${p.cautions.join(" / ")}\n\n`;
+
   md += `## 해석\n`;
   md += `${data.advanced.interpretation}\n`;
 
@@ -402,6 +412,15 @@ export function generateCompactText(data: SajuResult): string {
   for (const w of data.wolun) {
     lines.push(`${w.month}월 ${w.ganzhi} ${w.stemTenGod}/${w.branchTenGod} ${w.stage12}`);
   }
+
+  // ## 성격
+  const p = data.advanced.personality;
+  lines.push("");
+  lines.push("## 성격");
+  lines.push(`일간 ${p.dayMaster.stem}(${p.dayMaster.stemKo}${p.dayMaster.element}${p.dayMaster.yinYang === "양" ? "+" : "-"}) ${p.dayMaster.archetype} ${p.dayMaster.keywords.join("·")}`);
+  lines.push(`대표기운 ${p.tenGodProfile.dominant} [비겁${p.tenGodProfile.distribution.비겁} 식상${p.tenGodProfile.distribution.식상} 재성${p.tenGodProfile.distribution.재성} 관성${p.tenGodProfile.distribution.관성} 인성${p.tenGodProfile.distribution.인성}]`);
+  lines.push(`강점 ${p.strengths.join(", ")}`);
+  lines.push(`주의 ${p.cautions.join(", ")}`);
 
   // ## 만세력
   const c = data.reference.codes;

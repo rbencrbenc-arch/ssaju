@@ -854,3 +854,51 @@ test("daeun should be solar-term-time based by default", () => {
     "birthUtc basis should be represented as ISO datetime",
   );
 });
+
+test("personality analysis should be derived from day master, ten gods and elements", () => {
+  const result = calculateSaju({
+    year: 2001,
+    month: 11,
+    day: 3,
+    hour: 14,
+    minute: 20,
+    gender: "남",
+    calendar: "solar",
+  });
+
+  const p = result.advanced.personality;
+
+  // 일간 庚(경금, 양) 기반 본질
+  assert(p.dayMaster.stem === "庚", "day master stem should be the day stem");
+  assert(p.dayMaster.stemKo === "경", "day master korean reading should match");
+  assert(p.dayMaster.element === "금", "day master element should match");
+  assert(p.dayMaster.yinYang === "양", "day master yin/yang should match");
+  assert(p.dayMaster.archetype.length > 0, "day master should have an archetype");
+  assert(p.dayMaster.keywords.length > 0, "day master should expose keywords");
+
+  // 십성 분포는 일간(자기 자신)을 제외한 7개 자리 합계여야 한다
+  const groups = p.tenGodProfile.distribution;
+  const total = groups.비겁 + groups.식상 + groups.재성 + groups.관성 + groups.인성;
+  assert(total === 7, `ten god distribution should total 7 slots, got ${total}`);
+  assert(
+    ["비겁", "식상", "재성", "관성", "인성"].includes(p.tenGodProfile.dominant),
+    "dominant ten god group should be one of the five groups",
+  );
+  const dominantCount = groups[p.tenGodProfile.dominant];
+  for (const g of ["비겁", "식상", "재성", "관성", "인성"] as const) {
+    assert(dominantCount >= groups[g], "dominant group should have the max count");
+  }
+
+  assert(p.temperament.strongest.length > 0, "temperament should name the strongest element");
+  assert(p.strengths.length > 0, "personality should list strengths");
+  assert(p.cautions.length > 0, "personality should list cautions");
+  assert(p.summary.includes("일간"), "summary should describe the day master");
+
+  const markdown = result.toMarkdown();
+  assert(markdown.includes("## 성격"), "markdown should include personality section");
+  assert(markdown.includes(p.dayMaster.archetype), "markdown should mention the archetype");
+
+  const compact = result.toCompact();
+  assert(compact.includes("## 성격"), "compact should include personality section");
+  assert(compact.includes("대표기운"), "compact personality should include dominant ten god");
+});
