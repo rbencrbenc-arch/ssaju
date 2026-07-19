@@ -1,6 +1,6 @@
-// Vercel serverless function: 사주 데이터 -> Claude API -> 사람 말로 풀어주는 해석 리포트
+// Vercel serverless function: 사주 데이터 -> Google Gemini API -> 사람 말로 풀어주는 해석 리포트
 // 주제: personality(성격) / today(오늘의 운세) / match(궁합)
-// 환경변수: ANTHROPIC_API_KEY (필수), SAJU_MODEL (선택, 기본 haiku 4.5)
+// 환경변수: GEMINI_API_KEY (필수), SAJU_MODEL (선택, 기본 gemini-2.5-flash)
 
 const SYSTEM =
   "당신은 사주명리 20년 경력의 따뜻하고 현실적인 상담가입니다. " +
@@ -99,11 +99,11 @@ export default async function handler(req, res) {
     res.status(405).json({ error: "method", message: "POST만 지원합니다." });
     return;
   }
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.GEMINI_API_KEY;
   if (!key) {
     res.status(503).json({
       error: "no_key",
-      message: "서버에 ANTHROPIC_API_KEY가 아직 설정되지 않았습니다. Vercel 환경변수에 키를 추가해 주세요.",
+      message: "서버에 GEMINI_API_KEY가 아직 설정되지 않았습니다. Vercel 환경변수에 키를 추가해 주세요.",
     });
     return;
   }
@@ -122,23 +122,21 @@ export default async function handler(req, res) {
       return;
     }
 
-    const model = process.env.SAJU_MODEL || "claude-haiku-4-5-20251001";
+    const model = process.env.SAJU_MODEL || "gemini-2.5-flash";
     const prompt = buildPrompt({ ...body, topic });
 
-    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
+    const upstream = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM }] },
+          contents: [{ role: "user", parts: [{ text: prompt.text }] }],
+          generationConfig: { maxOutputTokens: 1800, temperature: 0.9 },
+        }),
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: 1500,
-        system: SYSTEM,
-        messages: [{ role: "user", content: prompt.text }],
-      }),
-    });
+    );
 
     if (!upstream.ok) {
       const detail = await upstream.text();
@@ -147,7 +145,16 @@ export default async function handler(req, res) {
     }
 
     const data = await upstream.json();
-    const text = (data.content || []).map((b) => b.text || "").join("").trim();
+    const cand = (data.candidates && data.candidates[0]) || {};
+    const text = ((cand.content && cand.content.parts) || [])
+      .map((p) => p.text || "")
+      .join("")
+      .trim();
+    if (!text) {
+      const reason = cand.finishReason || (data.promptFeedback && data.promptFeedback.blockReason) || "empty";
+      res.status(502).json({ error: "empty", message: `AI가 응답을 생성하지 못했습니다 (${reason}).` });
+      return;
+    }
     res.status(200).json({ text, model, topic });
   } catch (e) {
     res.status(500).json({ error: "server", message: String((e && e.message) || e) });
